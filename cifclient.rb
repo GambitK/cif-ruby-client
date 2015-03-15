@@ -10,12 +10,14 @@ class Cifclient
       @remote = remote
       @token = token
       @logger = Logger.new(STDOUT)
-      @handle = HTTPClient.new(:agent_name => 'rb-cif-sdk/0.0.1')
+      @handle = HTTPClient.new(:agent_name => 'cif-sdk-ruby/0.0.1')
       @handle.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
       @headers = {
+        'Accept' => 'application/vnd.cif.v' + 'json'
         'Authorization' => 'Token token=' + @token,
         'Content-Type' => 'application/json'
+        'User-Agent' => 'cif-sdk-ruby/0.0.1'
       }
     end
 
