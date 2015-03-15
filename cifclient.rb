@@ -2,7 +2,9 @@ require 'logger'
 require 'json'
 require 'httpclient'
 require 'uri'
-require 'pp'
+
+API_VERSION = '2'
+SDK_VERSION = '0.0.1a'
 
 class Cifclient
     attr_accessor :remote, :token, :verify_ssl, :timeout
@@ -14,11 +16,11 @@ class Cifclient
       @handle.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
       @headers = {
-        'Accept' => 'application/vnd.cif.v' + 'json'
+        'Accept' => 'application/vnd.cif.v' + API_VERSION + 'json'
         'Authorization' => 'Token token=' + @token,
         'Content-Type' => 'application/json'
-        'User-Agent' => 'cif-sdk-ruby/0.0.1'
-      }
+        'User-Agent' => 'cif-sdk-ruby/' + SDK_VERSION
+        }
     end
 
     def make_request(uri='',type='get',params={})
