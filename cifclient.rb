@@ -16,44 +16,49 @@ class Cifclient
       @handle.ssl_config.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
       @headers = {
-        'Accept' => 'application/vnd.cif.v' + API_VERSION + 'json'
+        'Accept' => 'application/vnd.cif.v' + API_VERSION + 'json',
         'Authorization' => 'Token token=' + @token,
-        'Content-Type' => 'application/json'
+        'Content-Type' => 'application/json',
         'User-Agent' => 'cif-sdk-ruby/' + SDK_VERSION
         }
     end
 
     def make_request(uri='',type='get',params={})
-
-      @logger.debug{@remote + ", " + @token}
-
       case type
       when 'get'
-        @logger.debug{"uri: #{uri}"}
+        uri = URI(@remote + uri)
         response = @handle.get(uri,params,@headers)
-        @logger.debug{response.status_code}
-        @logger.debug{JSON.parse(response.body)}
       end
+      case response.status_code
+        when 200...299
+          return JSON.parse(response.body)
+        when 300...399
+          @logger.debug { "received: #{response.status_code}" }
+        when 400...401
+          @logger.warn { 'unauthorized, bad or missing token' }
+        when 404
+          @logger.warn { "invalid remote uri: #{uri.to_s}" }
+        when 500...600
+          @logger.fatal { 'router failure, contact administrator' }
+      end
+      return nil
     end
 
-    def search(filters = {},limit=1,sort='lasttime')
+    def search(limit=10,sort='lasttime',filters={})
       filters[:limit] = limit
       filters[:sort] = sort
-      @logger.debug{filters}
-      uri = URI(@remote + '/observables')
-      res = make_request(uri,'get',filters)
+      res = make_request(uri='/observables',type='get',filters)
     end
 
     def ping
-      uri = URI(@remote + '/ping')
 
       start = Time.now
-      res = make_request(uri)
+      res = make_request(uri='/ping')
       return nil unless(res)
       return (Time.now() - start)
     end
 end
 
-cif = Cifclient.new("https://10.0.0.10", "bc6049e7c5d479db663e72cc3309dfe7d9dff7e734f7397d5886169ca8a9711d")
-#puts cif.ping
-cif.search(:query=>'61.240.144.116')
+cif = Cifclient.new("https://10.0.0.10", "bc6049e7c5d111db663e72cc1109dfe7d9dff7e734f7397d5006169ca8a0011d")
+puts cif.ping
+puts cif.search(limit=2,:query=>'61.240.144.116')
